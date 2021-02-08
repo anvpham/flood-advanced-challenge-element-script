@@ -2,7 +2,7 @@ import { step, TestSettings, By, beforeAll, afterAll } from '@flood/element'
 
 export const settings: TestSettings = {
 	waitUntil: 'visible',
-	actionDelay: '300ms',
+	actionDelay: '500ms',
 	stepDelay: '1s',
 }
 
@@ -31,8 +31,6 @@ export default () => {
 		const text = await h2Element.text()
 
 		const percent = text.split(' ')[3]
-
-		console.log(percent)
 
 		const radioButton = await browser.findElement(
 			By.id(`challenge-1-option-${percent.split('%')[0]}`),
@@ -127,7 +125,11 @@ export default () => {
 		const pageCount = (await browser.findElements(By.tagName('li'))).length - 2
 
 		if (pageCount === 0) {
-			itemCount = (await browser.findElements(By.attr('a', 'class', 'jss67'))).length
+			try {
+				itemCount = (await browser.findElements(By.attr('a', 'class', 'jss67'))).length
+			} catch {
+				itemCount = 0
+			}
 		} else {
 			const lastPageButton = await browser.findElement(
 				By.attr('button', 'aria-label', `Go to page ${pageCount}`),
@@ -137,8 +139,6 @@ export default () => {
 			itemCount = (await browser.findElements(By.attr('a', 'class', 'jss67'))).length
 			itemCount += (pageCount - 1) * 18
 		}
-
-		console.log(itemCount)
 
 		const input = await browser.findElement(By.id('challenge-5-amount-products'))
 		await input.type(itemCount.toString())
@@ -153,27 +153,24 @@ export default () => {
 	step('Challenge 6', async browser => {
 		const pageCount = (await browser.findElements(By.tagName('li'))).length - 2
 
-		const itemsOnPage1 = await browser.findElements(By.attr('a', 'class', 'jss67'))
+		const itemsOnCurrentPage = await browser.findElements(By.attr('a', 'class', 'jss67'))
 
-		itemsOnPage1.forEach(async item => {
-			const location = await item.location()
-			console.log(location.x)
-			console.log(location.y)
+		for (let i = 0; i < itemsOnCurrentPage.length; i++) {
+			await browser.scrollTo(itemsOnCurrentPage[i])
 
-			await browser.mouse.move(location.x, location.y)
+			const location = await itemsOnCurrentPage[i].centerPoint()
 
-			const openAddToCartButton = await browser.findElement(
-				By.attr('div', 'class', 'MuiCollapse-container jss66 MuiCollapse-entered'),
-			)
+			await browser.mouse.move(location[0], location[1])
+
+			console.log(location[0])
+			console.log(location[1])
+
+			const openAddToCartButton = await browser.findElement(By.css('.MuiCollapse-entered'))
 
 			await openAddToCartButton.click()
 
 			const addToCartButton = await browser.findElement(
-				By.attr(
-					'button',
-					'class',
-					'MuiButtonBase-root MuiButton-root MuiButton-contained jss271 MuiButton-containedPrimary',
-				),
+				By.attr('button', 'data-test-add-to-cart', 'true'),
 			)
 
 			await addToCartButton.click()
@@ -183,34 +180,36 @@ export default () => {
 			)
 
 			await closeButton.click()
-		})
+		}
 
 		if (pageCount !== 0) {
+			const page1Button = await browser.findElement(By.attr('button', 'aria-label', 'Go to page 1'))
+
+			await page1Button.click()
+
 			const nextPageButton = await browser.findElement(
 				By.attr('button', 'aria-label', 'Go to next page'),
 			)
 
 			for (let i = 0; i < pageCount - 1; i++) {
-				await nextPageButton.click()
-
 				const itemsOnCurrentPage = await browser.findElements(By.attr('a', 'class', 'jss67'))
 
-				itemsOnCurrentPage.forEach(async item => {
-					const location = await item.location()
-					browser.mouse.move(location.x, location.y)
+				for (let i = 0; i < itemsOnCurrentPage.length; i++) {
+					await browser.scrollTo(itemsOnCurrentPage[i])
 
-					const openAddToCartButton = await browser.findElement(
-						By.attr('div', 'class', 'MuiCollapse-container jss66 MuiCollapse-entered'),
-					)
+					const location = await itemsOnCurrentPage[i].centerPoint()
+
+					await browser.mouse.move(location[0], location[1])
+
+					console.log(location[0])
+					console.log(location[1])
+
+					const openAddToCartButton = await browser.findElement(By.css('.MuiCollapse-entered'))
 
 					await openAddToCartButton.click()
 
 					const addToCartButton = await browser.findElement(
-						By.attr(
-							'button',
-							'class',
-							'MuiButtonBase-root MuiButton-root MuiButton-contained jss271 MuiButton-containedPrimary',
-						),
+						By.attr('button', 'data-test-add-to-cart', 'true'),
 					)
 
 					await addToCartButton.click()
@@ -220,7 +219,9 @@ export default () => {
 					)
 
 					await closeButton.click()
-				})
+				}
+
+				await nextPageButton.click()
 			}
 		}
 
