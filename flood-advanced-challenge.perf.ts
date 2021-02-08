@@ -9,6 +9,7 @@ export const settings: TestSettings = {
 export default () => {
 	let currentMinPrice = 0
 	let currentMaxPrice = 0
+	let areItemsEmpty = false
 
 	beforeAll(async browser => {
 		// Run this hook before running the first step
@@ -134,6 +135,7 @@ export default () => {
 				itemCount = (await browser.findElements(By.attr('a', 'class', 'jss67'))).length
 			} catch {
 				itemCount = 0
+				areItemsEmpty = true
 			}
 		} else {
 			const lastPageButton = await browser.findElement(
@@ -156,77 +158,75 @@ export default () => {
 	})
 
 	step('Challenge 6', async browser => {
-		const pageCount = (await browser.findElements(By.tagName('li'))).length - 2
+		if (!areItemsEmpty) {
+			const pageCount = (await browser.findElements(By.tagName('li'))).length - 2
 
-		const itemsOnCurrentPage = await browser.findElements(By.attr('a', 'class', 'jss67'))
+			const itemsOnCurrentPage = await browser.findElements(By.attr('a', 'class', 'jss67'))
 
-		for (let i = 0; i < itemsOnCurrentPage.length; i++) {
-			await browser.scrollTo(itemsOnCurrentPage[i])
+			for (let i = 0; i < itemsOnCurrentPage.length; i++) {
+				await browser.scrollTo(itemsOnCurrentPage[i])
 
-			const location = await itemsOnCurrentPage[i].centerPoint()
+				const location = await itemsOnCurrentPage[i].centerPoint()
+				await browser.mouse.move(location[0], location[1])
 
-			await browser.mouse.move(location[0], location[1])
+				const openAddToCartButton = await browser.findElement(By.css('.MuiCollapse-entered'))
+				await openAddToCartButton.click()
 
-			const openAddToCartButton = await browser.findElement(By.css('.MuiCollapse-entered'))
+				const addToCartButton = await browser.findElement(
+					By.attr('button', 'data-test-add-to-cart', 'true'),
+				)
+				await addToCartButton.click()
 
-			await openAddToCartButton.click()
-
-			const addToCartButton = await browser.findElement(
-				By.attr('button', 'data-test-add-to-cart', 'true'),
-			)
-
-			await addToCartButton.click()
-
-			const closeButton = await browser.findElement(
-				By.attr('button', 'data-test-product-detail-modal-close', 'true'),
-			)
-
-			await closeButton.click()
-		}
-
-		if (pageCount !== 0) {
-			const page1Button = await browser.findElement(By.attr('button', 'aria-label', 'Go to page 1'))
-
-			await page1Button.click()
-
-			const nextPageButton = await browser.findElement(
-				By.attr('button', 'aria-label', 'Go to next page'),
-			)
-
-			for (let i = 0; i < pageCount - 1; i++) {
-				const itemsOnCurrentPage = await browser.findElements(By.attr('a', 'class', 'jss67'))
-
-				for (let i = 0; i < itemsOnCurrentPage.length; i++) {
-					await browser.scrollTo(itemsOnCurrentPage[i])
-
-					const location = await itemsOnCurrentPage[i].centerPoint()
-					await browser.mouse.move(location[0], location[1])
-
-					const openAddToCartButton = await browser.findElement(By.css('.MuiCollapse-entered'))
-					await openAddToCartButton.click()
-
-					const addToCartButton = await browser.findElement(
-						By.attr('button', 'data-test-add-to-cart', 'true'),
-					)
-
-					await addToCartButton.click()
-
-					const closeButton = await browser.findElement(
-						By.attr('button', 'data-test-product-detail-modal-close', 'true'),
-					)
-
-					await closeButton.click()
-				}
-
-				await nextPageButton.click()
+				const closeButton = await browser.findElement(
+					By.attr('button', 'data-test-product-detail-modal-close', 'true'),
+				)
+				await closeButton.click()
 			}
+
+			if (pageCount !== 0) {
+				const page1Button = await browser.findElement(
+					By.attr('button', 'aria-label', 'Go to page 1'),
+				)
+
+				await page1Button.click()
+
+				const nextPageButton = await browser.findElement(
+					By.attr('button', 'aria-label', 'Go to next page'),
+				)
+
+				for (let i = 0; i < pageCount - 1; i++) {
+					const itemsOnCurrentPage = await browser.findElements(By.attr('a', 'class', 'jss67'))
+
+					for (let i = 0; i < itemsOnCurrentPage.length; i++) {
+						await browser.scrollTo(itemsOnCurrentPage[i])
+
+						const location = await itemsOnCurrentPage[i].centerPoint()
+						await browser.mouse.move(location[0], location[1])
+
+						const openAddToCartButton = await browser.findElement(By.css('.MuiCollapse-entered'))
+						await openAddToCartButton.click()
+
+						const addToCartButton = await browser.findElement(
+							By.attr('button', 'data-test-add-to-cart', 'true'),
+						)
+						await addToCartButton.click()
+
+						const closeButton = await browser.findElement(
+							By.attr('button', 'data-test-product-detail-modal-close', 'true'),
+						)
+						await closeButton.click()
+					}
+
+					await nextPageButton.click()
+				}
+			}
+
+			const checkButton = await browser.findElement(By.visibleText('CHECK'))
+			await checkButton.click()
+
+			const nextButton = await browser.findElement(By.visibleText('NEXT'))
+			await nextButton.click()
 		}
-
-		const checkButton = await browser.findElement(By.visibleText('CHECK'))
-		await checkButton.click()
-
-		const nextButton = await browser.findElement(By.visibleText('NEXT'))
-		await nextButton.click()
 	})
 
 	step('Challenge 7', async browser => {
@@ -254,25 +254,91 @@ export default () => {
 		await minSlider.focus()
 
 		if (minPrice > currentMinPrice) {
+			console.log(minPrice - currentMinPrice)
 			for (let i = 0; i < minPrice - currentMinPrice; i++) {
 				browser.press('ArrowRight')
 			}
 		} else {
+			console.log(currentMinPrice - minPrice)
 			for (let i = 0; i < currentMinPrice - minPrice; i++) {
 				browser.press('ArrowLeft')
 			}
 		}
 
-		const maxSlider = await browser.findElement(By.attr('span', 'data-index', '0'))
+		const maxSlider = await browser.findElement(By.attr('span', 'data-index', '1'))
 		await maxSlider.focus()
 
 		if (maxPrice > currentMaxPrice) {
+			console.log(maxPrice - currentMaxPrice)
 			for (let i = 0; i < maxPrice - currentMaxPrice; i++) {
 				browser.press('ArrowRight')
 			}
 		} else {
+			console.log(currentMaxPrice - maxPrice)
 			for (let i = 0; i < currentMaxPrice - maxPrice; i++) {
 				browser.press('ArrowLeft')
+			}
+		}
+
+		const checkButton = await browser.findElement(By.visibleText('CHECK'))
+		await checkButton.click()
+
+		const nextButton = await browser.findElement(By.visibleText('NEXT'))
+		await nextButton.click()
+	})
+
+	step('Challenge 8', async browser => {
+		const cartButton = await browser.findElement(By.id('cart-button'))
+		await cartButton.click()
+
+		const minPrice = parseInt(
+			(await (await browser.findElement(By.id('challenge-8-min-price'))).text()).split('$')[1],
+		)
+
+		const maxPrice = parseInt(
+			(await (await browser.findElement(By.id('challenge-8-max-price'))).text()).split('$')[1],
+		)
+
+		let totalPrice = parseInt(
+			(await (await browser.findElement(By.id('subtotal-price'))).text()).split('$')[1],
+		)
+
+		if (totalPrice <= maxPrice && totalPrice >= minPrice) {
+			const checkButton = await browser.findElement(By.visibleText('CHECK'))
+			await checkButton.click()
+
+			const nextButton = await browser.findElement(By.visibleText('NEXT'))
+			await nextButton.click()
+		} else {
+			if (totalPrice < minPrice) {
+				const addButton = await browser.findElement(By.attr('button', 'data-test-add', 'true'))
+				const firstItemPrice = parseInt(
+					(
+						await (
+							await browser.findElement(By.attr('h6', 'data-test-purchase-price', 'true'))
+						).text()
+					).split('$')[1],
+				)
+
+				while (totalPrice < minPrice) {
+					await addButton.click()
+					totalPrice += firstItemPrice
+				}
+			} else {
+				const removeButtons = await browser.findElements(
+					By.attr('button', 'data-test-remove', 'true'),
+				)
+
+				const itemsPrice = await browser.findElements(
+					By.attr('h6', 'data-test-purchase-price', 'true'),
+				)
+
+				for (let i = 0; i < removeButtons.length; i++) {
+					await removeButtons[i].click()
+					totalPrice -= parseInt(await (await itemsPrice[i].text()).split('$')[1])
+
+					if (totalPrice < maxPrice) break
+				}
 			}
 		}
 
