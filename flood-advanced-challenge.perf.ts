@@ -162,9 +162,6 @@ export default () => {
 
 			await browser.mouse.move(location[0], location[1])
 
-			console.log(location[0])
-			console.log(location[1])
-
 			const openAddToCartButton = await browser.findElement(By.css('.MuiCollapse-entered'))
 
 			await openAddToCartButton.click()
@@ -198,14 +195,9 @@ export default () => {
 					await browser.scrollTo(itemsOnCurrentPage[i])
 
 					const location = await itemsOnCurrentPage[i].centerPoint()
-
 					await browser.mouse.move(location[0], location[1])
 
-					console.log(location[0])
-					console.log(location[1])
-
 					const openAddToCartButton = await browser.findElement(By.css('.MuiCollapse-entered'))
-
 					await openAddToCartButton.click()
 
 					const addToCartButton = await browser.findElement(
@@ -230,5 +222,22 @@ export default () => {
 
 		const nextButton = await browser.findElement(By.visibleText('NEXT'))
 		await nextButton.click()
+	})
+
+	step('Challenge 7', async browser => {
+		const category = await (
+			await browser.findElement(By.attr('span', 'data-test-category', 'true'))
+		).text()
+
+		const size = await (await browser.findElement(By.attr('span', 'data-test-size', 'true'))).text()
+
+		const minPrice = await (await browser.findElement(By.id('challenge-7-min-price'))).text()
+
+		const maxPrice = await (await browser.findElement(By.id('challenge-7-max-price'))).text()
+
+		const categoryCheckBox = await browser.findElement(By.attr('input', 'name', category))
+		await categoryCheckBox.click()
+
+		const sizeCheckBox = await browser.findElement(By.attr('input', 'name', size))
 	})
 }
