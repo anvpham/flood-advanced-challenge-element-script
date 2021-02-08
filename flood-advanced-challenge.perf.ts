@@ -7,6 +7,9 @@ export const settings: TestSettings = {
 }
 
 export default () => {
+	let currentMinPrice = 0
+	let currentMaxPrice = 0
+
 	beforeAll(async browser => {
 		// Run this hook before running the first step
 		await browser.wait('500ms')
@@ -103,9 +106,11 @@ export default () => {
 	step('Challenge 5', async browser => {
 		const minPriceText = await browser.findElement(By.id('challenge-5-min-price'))
 		const minPriceValue = parseInt((await minPriceText.text()).split('$')[1])
+		currentMinPrice = minPriceValue
 
 		const maxPriceText = await browser.findElement(By.id('challenge-5-max-price'))
 		const maxPriceValue = parseInt((await maxPriceText.text()).split('$')[1])
+		currentMaxPrice = maxPriceValue
 
 		const minSlider = await browser.findElement(By.attr('span', 'data-index', '0'))
 		await minSlider.focus()
@@ -231,13 +236,50 @@ export default () => {
 
 		const size = await (await browser.findElement(By.attr('span', 'data-test-size', 'true'))).text()
 
-		const minPrice = await (await browser.findElement(By.id('challenge-7-min-price'))).text()
+		const minPrice = parseInt(
+			await (await browser.findElement(By.id('challenge-7-min-price'))).text(),
+		)
 
-		const maxPrice = await (await browser.findElement(By.id('challenge-7-max-price'))).text()
+		const maxPrice = parseInt(
+			await (await browser.findElement(By.id('challenge-7-max-price'))).text(),
+		)
 
 		const categoryCheckBox = await browser.findElement(By.attr('input', 'name', category))
 		await categoryCheckBox.click()
 
 		const sizeCheckBox = await browser.findElement(By.attr('input', 'name', size))
+		await sizeCheckBox.click()
+
+		const minSlider = await browser.findElement(By.attr('span', 'data-index', '0'))
+		await minSlider.focus()
+
+		if (minPrice > currentMinPrice) {
+			for (let i = 0; i < minPrice - currentMinPrice; i++) {
+				browser.press('ArrowRight')
+			}
+		} else {
+			for (let i = 0; i < currentMinPrice - minPrice; i++) {
+				browser.press('ArrowLeft')
+			}
+		}
+
+		const maxSlider = await browser.findElement(By.attr('span', 'data-index', '0'))
+		await maxSlider.focus()
+
+		if (maxPrice > currentMaxPrice) {
+			for (let i = 0; i < maxPrice - currentMaxPrice; i++) {
+				browser.press('ArrowRight')
+			}
+		} else {
+			for (let i = 0; i < currentMaxPrice - maxPrice; i++) {
+				browser.press('ArrowLeft')
+			}
+		}
+
+		const checkButton = await browser.findElement(By.visibleText('CHECK'))
+		await checkButton.click()
+
+		const nextButton = await browser.findElement(By.visibleText('NEXT'))
+		await nextButton.click()
 	})
 }
