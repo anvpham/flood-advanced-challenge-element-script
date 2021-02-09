@@ -276,7 +276,14 @@ export default () => {
 
 		await Promise.all(minSliderPromises)
 
-		const maxSlider = await browser.findElement(By.attr('span', 'data-index', '1'))
+		let maxSlider
+		if (minPrice > currentMaxPrice) {
+			maxSlider = await browser.findElement(
+				By.attr('span', 'aria-valuenow', currentMaxPrice.toString()),
+			)
+		} else {
+			maxSlider = await browser.findElement(By.attr('span', 'data-index', '1'))
+		}
 		await maxSlider.focus()
 		const maxSliderPromises: Promise<void>[] = []
 
