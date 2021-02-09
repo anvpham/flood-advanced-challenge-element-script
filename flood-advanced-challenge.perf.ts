@@ -115,36 +115,46 @@ export default () => {
 
 		const minSlider = await browser.findElement(By.attr('span', 'data-index', '0'))
 		await minSlider.focus()
+		const minSliderPromises: Promise<void>[] = []
+
+		browser.evaluate(() => {
+			const element = document.getElementsByClassName('jss67')
+			if (element.length === 0) {
+				areItemsEmpty = true
+			}
+		})
 
 		for (let i = 0; i < minPriceValue - 50; i++) {
-			browser.press('ArrowRight')
+			minSliderPromises.push(browser.press('ArrowRight'))
 		}
+
+		await Promise.all(minSliderPromises)
 
 		const maxSlider = await browser.findElement(By.attr('span', 'data-index', '1'))
 		await maxSlider.focus()
+		const maxSliderPromises: Promise<void>[] = []
 
 		for (let i = 0; i < 2000 - maxPriceValue; i++) {
-			browser.press('ArrowLeft')
+			maxSliderPromises.push(browser.press('ArrowLeft'))
 		}
+
+		await Promise.all(maxSliderPromises)
 
 		let itemCount = 0
 		const pageCount = (await browser.findElements(By.tagName('li'))).length - 2
 
-		if (pageCount === 0) {
-			try {
+		if (!areItemsEmpty) {
+			if (pageCount === 0) {
 				itemCount = (await browser.findElements(By.attr('a', 'class', 'jss67'))).length
-			} catch {
-				itemCount = 0
-				areItemsEmpty = true
-			}
-		} else {
-			const lastPageButton = await browser.findElement(
-				By.attr('button', 'aria-label', `Go to page ${pageCount}`),
-			)
-			await lastPageButton.click()
+			} else {
+				const lastPageButton = await browser.findElement(
+					By.attr('button', 'aria-label', `Go to page ${pageCount}`),
+				)
+				await lastPageButton.click()
 
-			itemCount = (await browser.findElements(By.attr('a', 'class', 'jss67'))).length
-			itemCount += (pageCount - 1) * 18
+				itemCount = (await browser.findElements(By.attr('a', 'class', 'jss67'))).length
+				itemCount += (pageCount - 1) * 18
+			}
 		}
 
 		const input = await browser.findElement(By.id('challenge-5-amount-products'))
@@ -220,13 +230,13 @@ export default () => {
 					await nextPageButton.click()
 				}
 			}
-
-			const checkButton = await browser.findElement(By.visibleText('CHECK'))
-			await checkButton.click()
-
-			const nextButton = await browser.findElement(By.visibleText('NEXT'))
-			await nextButton.click()
 		}
+
+		const checkButton = await browser.findElement(By.visibleText('CHECK'))
+		await checkButton.click()
+
+		const nextButton = await browser.findElement(By.visibleText('NEXT'))
+		await nextButton.click()
 	})
 
 	step('Challenge 7', async browser => {
@@ -252,33 +262,35 @@ export default () => {
 
 		const minSlider = await browser.findElement(By.attr('span', 'data-index', '0'))
 		await minSlider.focus()
+		const minSliderPromises: Promise<void>[] = []
 
 		if (minPrice > currentMinPrice) {
-			console.log(minPrice - currentMinPrice)
 			for (let i = 0; i < minPrice - currentMinPrice; i++) {
-				browser.press('ArrowRight')
+				minSliderPromises.push(browser.press('ArrowRight'))
 			}
 		} else {
-			console.log(currentMinPrice - minPrice)
 			for (let i = 0; i < currentMinPrice - minPrice; i++) {
-				browser.press('ArrowLeft')
+				minSliderPromises.push(browser.press('ArrowLeft'))
 			}
 		}
+
+		await Promise.all(minSliderPromises)
 
 		const maxSlider = await browser.findElement(By.attr('span', 'data-index', '1'))
 		await maxSlider.focus()
+		const maxSliderPromises: Promise<void>[] = []
 
 		if (maxPrice > currentMaxPrice) {
-			console.log(maxPrice - currentMaxPrice)
 			for (let i = 0; i < maxPrice - currentMaxPrice; i++) {
-				browser.press('ArrowRight')
+				maxSliderPromises.push(browser.press('ArrowRight'))
 			}
 		} else {
-			console.log(currentMaxPrice - maxPrice)
 			for (let i = 0; i < currentMaxPrice - maxPrice; i++) {
-				browser.press('ArrowLeft')
+				maxSliderPromises.push(browser.press('ArrowLeft'))
 			}
 		}
+
+		await Promise.all(maxSliderPromises)
 
 		const checkButton = await browser.findElement(By.visibleText('CHECK'))
 		await checkButton.click()
